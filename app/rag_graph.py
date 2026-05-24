@@ -2,29 +2,13 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, END
 
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_postgres import PGVector
-from langchain_ollama import OllamaLLM
+from vector_store import get_vector_store
+from llm import get_llm
 
 
-CONNECTION = (
-    "postgresql+psycopg://postgres:postgres@localhost:5432/ragdb"
-)
-
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
-vector_store = PGVector(
-    embeddings=embeddings,
-    connection=CONNECTION,
-    collection_name="documents"
-)
-
-llm = OllamaLLM(
-    model="llama3.2"
-)
+# Inicializar componentes
+vector_store = get_vector_store()
+llm = get_llm()
 
 
 # -----------------------
@@ -32,7 +16,6 @@ llm = OllamaLLM(
 # -----------------------
 
 class RAGState(TypedDict):
-
     question: str
     context: str
     answer: str
@@ -62,19 +45,22 @@ def retrieve(state: RAGState):
 def generate(state: RAGState):
 
     prompt = f"""
-    Use ONLY the provided context.
+You are a helpful assistant.
 
-    If the answer is not present say:
-    "I could not find the answer in the documents"
+Use ONLY the provided context.
 
-    Context:
-    {state["context"]}
+If the answer is not present in the context say:
 
-    Question:
-    {state["question"]}
+"I could not find the answer in the retrieved documents"
 
-    Answer:
-    """
+Context:
+{state["context"]}
+
+Question:
+{state["question"]}
+
+Answer:
+"""
 
     answer = llm.invoke(prompt)
 
@@ -84,7 +70,7 @@ def generate(state: RAGState):
 
 
 # -----------------------
-# GRAPH
+# BUILD GRAPH
 # -----------------------
 
 graph = StateGraph(RAGState)
@@ -113,24 +99,30 @@ graph.add_edge(
     END
 )
 
+
 app = graph.compile()
 
 
 # -----------------------
-# RUN
+# RUN APP
 # -----------------------
 
 if __name__ == "__main__":
 
-    question = input(
-        "Ask a question: "
-    )
+    while True:
 
-    result = app.invoke(
-        {
-            "question": question
-        }
-    )
+        question = input(
+            "\nAsk a question ('exit' to quit): "
+        )
 
-    print("\nAnswer:\n")
-    print(result["answer"])
+        if question.lower() == "exit":
+            break
+
+        result = app.invoke(
+            {
+                "question": question
+            }
+        )
+
+        print("\nAnswer:\n")
+        print(result["answer"])
