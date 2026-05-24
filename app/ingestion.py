@@ -26,8 +26,8 @@ def ingest_document(path):
 
     # dividir en chunks
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100
+        chunk_size=1000,
+        chunk_overlap=200
     )
 
     chunks = splitter.split_documents(docs)
@@ -51,5 +51,5 @@ def ingest_document(path):
 if __name__ == "__main__":
 
     ingest_document(
-        "data/sample.pdf"
+        "data/pythoncrashcourse.pdf"
     )
