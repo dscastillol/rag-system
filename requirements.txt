@@ -11,3 +11,5 @@ pypdf
 python-dotenv
 tiktoken
 openai
+
+sentence-transformers
