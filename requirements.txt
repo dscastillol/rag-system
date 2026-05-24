@@ -13,3 +13,5 @@ tiktoken
 openai
 
 sentence-transformers
+
+langchain-ollama
